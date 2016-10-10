@@ -73,3 +73,8 @@ trait InRange[N<:TNumber, S, R]
 
 case class TNumberValue[N<:TNumber](value: Int)
 
+/**
+ * A shape 'S' corresponds to index type 'I'
+ */
+@implicitNotFound(msg="Index type ${I} does not match Shape type ${S}")
+trait ShapeToIndex[S,I]
