@@ -31,7 +31,7 @@ object DimValue{
 }
 
 
-class ShapeValue[S]private (shape: IndexedSeq[Int]){
+class ShapeValue[S]private (val shape: IndexedSeq[Int]){
   def append[D<:Dimension](d: DimValue[D]) = new ShapeValue[(S,D)](shape:+d.dim)
 }
 

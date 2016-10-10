@@ -35,7 +35,24 @@ trait Tensor[Shape] {
 }
 
 trait TensorImpl {
-  def build[Shape](p: ShapeValue[Shape]): Tensor[Shape]
+  def zeros[Shape](p: ShapeValue[Shape]): Tensor[Shape]
+  def ones[Shape](p: ShapeValue[Shape]): Tensor[Shape]
+
+  /**
+   * create a tensor with shape 'Shape' from a java array.
+   * @param flattened all the elements in this tensor, row-major
+   */
+  def create[Shape](flattened: Array[Double])(p: ShapeValue[Shape]): Tensor[Shape]
+
+  /**
+   * generate uniform random numbers in the range 0 to 1
+   */
+  def rand[Shape](p: ShapeValue[Shape]): Tensor[Shape]
+
+  /**
+   * generate Gaussian random numbers with mean zero and standard deviation 1
+   */
+  def randGaussian[Shape](p: ShapeValue[Shape]): Tensor[Shape]
 }
 
 class TensorBuilder[Shape] private (val p: ShapeValue[Shape]){
@@ -43,9 +60,25 @@ class TensorBuilder[Shape] private (val p: ShapeValue[Shape]){
 
   def ^ [D<:Dimension](d: DimValue[D]) = nextDim(d)
 
-  def build(implicit impl: TensorImpl): Tensor[Shape] = impl.build(p)
+  def zeros(implicit impl: TensorImpl): Tensor[Shape] = impl.zeros(p)
 
-  def ^! (implicit impl: TensorImpl) = build(impl)
+  def ones(implicit impl: TensorImpl): Tensor[Shape] = impl.ones(p)
+
+  /**
+   * create a tensor with shape 'Shape' from a java array.
+   * @param flattened all the elements in this tensor, row-major
+   */
+  def create(flattened: Array[Double])(implicit impl: TensorImpl): Tensor[Shape] = impl.create(flattened)(p)
+
+  /**
+   * generate uniform random numbers in the range 0 to 1
+   */
+  def rand(implicit impl: TensorImpl): Tensor[Shape] = impl.rand(p)
+
+  /**
+   * generate Gaussian random numbers with mean zero and standard deviation 1
+   */
+  def randGaussian(implicit impl: TensorImpl): Tensor[Shape] = impl.randGaussian(p)
 }
 
 object TensorBuilder{
