@@ -9,31 +9,44 @@ import org.nd4j.linalg.factory.Nd4j
 /**
  * Created by weijiayi on 09/10/2016.
  */
-class Tensor[Shape] private (private val ndArray: INDArray) {
+class Tensor[Shape] private (val ndArray: INDArray) {
 
   def shape = ndArray.shape()
 
-  def *^ [S1, R](t1: Tensor[S1])(implicit comp: ShapeBroadcast[Shape,S1,R]): Tensor[R] = {
-    new Tensor[R](ndArray mul t1.ndArray)
+  def shapeIndexedSeq = shape.toIndexedSeq
+
+  private def binaryOp[S1, R](t1: Tensor[S1], op: (INDArray,INDArray) => INDArray)(implicit comp: ShapeBroadcast[Shape,S1,R]): Tensor[R] = {
+    val newShape = broadCastShape(shape, t1.shape)
+    def broadCastAndShape(a: INDArray): INDArray = {
+      val reshaped = if(a.shape().length<newShape.length) {
+        val rs = IndexedSeq.fill(newShape.length - a.shape().length)(1) ++ a.shape()
+        a.reshape(rs: _*)
+      } else a
+      reshaped.broadcast(newShape :_*)
+    }
+    val array = op(broadCastAndShape(ndArray),broadCastAndShape(t1.ndArray))
+    new Tensor[R](array)
   }
 
-  def *^= [S1, R](t1: Tensor[S1])(implicit comp: ShapeBroadcast[Shape,S1,R]): Unit = new Tensor[R](ndArray muli t1.ndArray)
+  def *^ [S1, R](t1: Tensor[S1])(implicit comp: ShapeBroadcast[Shape,S1,R]): Tensor[R] = binaryOp(t1, _ mul _)
 
-  def + [S1, R](t1: Tensor[S1])(implicit comp: ShapeBroadcast[Shape,S1,R]): Tensor[R] = new Tensor[R](ndArray add t1.ndArray)
+  def *^= [S1, R](t1: Tensor[S1])(implicit comp: ShapeBroadcast[Shape,S1,R]): Unit = binaryOp(t1, _ muli _)
 
-  def += [S1, R](t1: Tensor[S1])(implicit comp: ShapeBroadcast[Shape,S1,R]): Unit = new Tensor[R](ndArray addi t1.ndArray)
+  def + [S1, R](t1: Tensor[S1])(implicit comp: ShapeBroadcast[Shape,S1,R]): Tensor[R] = binaryOp(t1, _ add _)
 
-  def - [S1, R](t1: Tensor[S1])(implicit comp: ShapeBroadcast[Shape,S1,R]): Tensor[R] = new Tensor[R](ndArray sub t1.ndArray)
+  def += [S1, R](t1: Tensor[S1])(implicit comp: ShapeBroadcast[Shape,S1,R]): Unit = binaryOp(t1, _ addi _)
 
-  def -= [S1, R](t1: Tensor[S1])(implicit comp: ShapeBroadcast[Shape,S1,R]): Unit = new Tensor[R](ndArray subi t1.ndArray)
+  def - [S1, R](t1: Tensor[S1])(implicit comp: ShapeBroadcast[Shape,S1,R]): Tensor[R] = binaryOp(t1, _ sub _)
 
-  def matMul[D1,R](t1: Tensor[D1])(implicit comp: DimMul[Shape,D1,R]): Tensor[R] = new Tensor[R](ndArray mmul t1.ndArray)
+  def -= [S1, R](t1: Tensor[S1])(implicit comp: ShapeBroadcast[Shape,S1,R]): Unit = binaryOp(t1, _ subi _)
 
-  def matMulInplace[D1,R](t1: Tensor[D1])(implicit comp: DimMul[Shape,D1,R]): Unit = new Tensor[R](ndArray mmuli t1.ndArray)
+  def matMul[D1,R](t1: Tensor[D1])(implicit comp: ShapeMul[Shape,D1,R]): Tensor[R] = new Tensor[R](ndArray mmul t1.ndArray)
 
-  def * [D1,R](t1: Tensor[D1])(implicit comp: DimMul[Shape,D1,R]): Tensor[R] = matMul(t1)
+  def matMulInplace[D1,R](t1: Tensor[D1])(implicit comp: ShapeMul[Shape,D1,R]): Unit = new Tensor[R](ndArray mmuli t1.ndArray)
 
-  def *=[D1,R](t1: Tensor[D1])(implicit comp: DimMul[Shape,D1,R]): Unit = matMulInplace(t1)
+  def * [D1,R](t1: Tensor[D1])(implicit comp: ShapeMul[Shape,D1,R]): Tensor[R] = matMul(t1)
+
+  def *=[D1,R](t1: Tensor[D1])(implicit comp: ShapeMul[Shape,D1,R]): Unit = matMulInplace(t1)
 
   def rank: Int = shape.length
 
@@ -90,11 +103,17 @@ class Tensor[Shape] private (private val ndArray: INDArray) {
 }
 
 object Tensor {
+  def createUse[Shape](p: ShapeValue[Shape],single: Int => INDArray,plural: IndexedSeq[Int] => INDArray): Tensor[Shape] = {
+    val shape = p.shape
+    val array = if(shape.length == 1)
+      single(shape.head)
+    else plural(shape)
+    new Tensor[Shape](array)
+  }
 
+    def zeros[Shape](p: ShapeValue[Shape]): Tensor[Shape] = createUse(p,Nd4j.zeros,Nd4j.zeros(_ :_*))
 
-    def zeros[Shape](p: ShapeValue[Shape]): Tensor[Shape] = new Tensor(Nd4j.zeros(p.shape :_*))
-
-    def ones[Shape](p: ShapeValue[Shape]): Tensor[Shape] = new Tensor(Nd4j.ones(p.shape :_*))
+    def ones[Shape](p: ShapeValue[Shape]): Tensor[Shape] = createUse(p, Nd4j.ones, Nd4j.ones(_ :_*))
 
     /**
      * generate uniform random numbers in the range 0 to 1

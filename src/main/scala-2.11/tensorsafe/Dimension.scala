@@ -58,7 +58,7 @@ trait ShapeBroadcast[A,B,R]
  * A tensor of shape 'A' matrix multiply a tensor of shape 'B' should results in a tensor of shape 'C'
  */
 @implicitNotFound(msg = "Cannot find a type class for matrix multiplication between ${A} and ${B}")
-trait DimMul[A,B,R]
+trait ShapeMul[A,B,R]
 
 /**
  * A tensor of shape 'B' is the transpose of the tensor of shape 'A'
@@ -68,7 +68,7 @@ trait ShapeReverse[A,R]
 /**
  * A TNumber can be used to index a dimension of Shape S, resulting R if delete this dimension
  */
-trait InRange[N<:TNumber, S, R]
+trait InRange[N, S, R]
 
 case class TNumberValue[N<:TNumber](value: Int)
 

@@ -1,7 +1,7 @@
 package tensorsafe.test.example
 
 import tensorsafe._
-import tensorsafe.Imports._
+import tensorsafe.Implicits._
 
 trait DataNum extends VarDim
 trait InputDim extends VarDim
