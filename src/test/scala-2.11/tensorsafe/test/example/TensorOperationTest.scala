@@ -29,8 +29,8 @@ object TensorOperationTest {
     val dim5 = const[D5](5)
     val dim6 = const[D5](6)
 
-    val t1 = (vector(dim2)^ dim3 ^ dim4 ^ unitDim).zeros
-    val t2 = (vector(dim3) ^ unitDim ^ dim5).ones
+    val t1 = (TensorBuilder > dim2 ^ dim3 ^ dim4 ^ unitDim).zeros
+    val t2 = (TensorBuilder > dim3 ^ unitDim ^ dim5).ones
 
     t1 + t2
     t1 *^ t2

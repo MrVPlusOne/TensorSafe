@@ -19,22 +19,22 @@ trait VarDim extends Dimension
  * @tparam D Dimension type
  */
 trait DimValue[D]{
-  def dim: Int
+  def value: Int
 }
 
 object DimValue{
   def const[D](v: Int) = new DimValue[D] {
-    override def dim: Int = v
+    override def value: Int = v
   }
 }
 
 
 class ShapeValue[S]private (val shape: IndexedSeq[Int]){
-  def append[D<:Dimension](d: DimValue[D]) = new ShapeValue[(S,D)](shape:+d.dim)
+  def append[D<:Dimension](d: DimValue[D]) = new ShapeValue[(S,D)](shape:+d.value)
 }
 
 object ShapeValue{
-  def single[D<:Dimension](d: DimValue[D]) = new ShapeValue[D](IndexedSeq(d.dim))
+  def single[D<:Dimension](d: DimValue[D]) = new ShapeValue[D](IndexedSeq(d.value))
 }
 
 /**

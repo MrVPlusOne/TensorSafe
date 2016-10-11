@@ -163,6 +163,7 @@ class TensorBuilder[Shape] private (val p: ShapeValue[Shape]){
   def randGaussian: Tensor[Shape] = impl.randGaussian(p)
 }
 
+
 object TensorBuilder{
-  def vector[D<:Dimension](d: DimValue[D]) = new TensorBuilder(ShapeValue.single(d))
+  def > [D<:Dimension](d: DimValue[D]) = new TensorBuilder(ShapeValue.single(d))
 }

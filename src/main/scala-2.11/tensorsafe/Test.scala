@@ -1,7 +1,5 @@
 package tensorsafe
 
-import TensorBuilder.vector
-import org.nd4j.linalg.factory.Nd4j
 import scala.language.postfixOps
 import Implicits._
 import DimValue.const
@@ -29,12 +27,12 @@ object Test {
     val dim5 = const[Dim5](5)
     val dim3 = const[Dim3](3)
 
-    val t1 = (vector(dim1)^dim4 ^ dim2 ^ unitDim).zeros
-    val t2 = (vector(dim4) ^ unitDim ^ dim5).ones
+    val t1 = (TensorBuilder > dim1 ^ dim4 ^ dim2 ^ unitDim).zeros
+    val t2 = (TensorBuilder > dim4 ^ unitDim ^ dim5).ones
     val t3 = t1 *^ t2
 
-    val t4 = (vector(dim1) ^ unitDim ^ dim2).ones
-    val t5 = (vector(dim5) ^ dim2).randGaussian
+    val t4 = (TensorBuilder > dim1 ^ unitDim ^ dim2).ones
+    val t5 = (TensorBuilder > dim5 ^ dim2).randGaussian
     val t6 = t4 + t5
 
     println{

@@ -1,14 +1,20 @@
-package tensorsafe.test.example
+package tensorsafe.example
 
-import tensorsafe._
 import tensorsafe.Implicits._
+import tensorsafe._
+
+import scala.util.Random
 
 trait DataNum extends VarDim
 trait InputDim extends VarDim
 trait LabelNum extends VarDim
 trait HiddenNum extends VarDim
 
-object NeuralNetworkExample {
+/**
+ * An example from the programming assignment of Stanford CS224d: Deep learning for NLP,
+ * originally written in python.
+ */
+object NNExample {
 
   def sigmoid(x: Double) = 1.0/(1+math.exp(-x))
   def sigmoid_grad(f: Double) = f * (1-f)
@@ -45,7 +51,7 @@ object NeuralNetworkExample {
    * @param f should be a function that takes a single argument and outputs the cost and its gradients
    * @param x is the point to check the gradient at
    */
-  def gradcheck_naive[S,A,Idx](f: Tensor[S]=> (Double, Tensor[S]), x: Tensor[S])(implicit s2i: ShapeToIndex[S,Idx], i2v: IndexToVec[Idx]): Unit = {
+  def gradcheck_naive[S,Idx](f: Tensor[S]=> (Double, Tensor[S]), x: Tensor[S])(implicit s2i: ShapeToIndex[S,Idx], i2v: IndexToVec[Idx]): Unit = {
     val (_, grad) = f(x)
     val h = 1e-4
 
@@ -59,7 +65,7 @@ object NeuralNetworkExample {
       val numericGrad = (fxh-fxnh) / (2*h)
 
       // Compare gradients
-      import math.{max,abs}
+      import math.{abs, max}
       val relativeDiff =  abs(numericGrad-grad(i)) / max(max(1, abs(numericGrad)), abs(grad(i)))
 
       if(relativeDiff > 1e-5){
@@ -74,7 +80,46 @@ object NeuralNetworkExample {
 
 
 
+  trait D1 extends VarDim
+  trait D2 extends VarDim
+  trait D3 extends VarDim
 
+  def sanity_check(): Unit = {
+    def quad[S](x: Tensor[S])(implicit b: ShapeBroadcast[S,S,S], b2: ShapeBroadcast[S,UnitDim,S]) = ((x*^x).sumAll, x *^ scalar(2))
+
+    val d1 = dim[D1](3)
+    val d2 = dim[D2](4)
+    val d3 = dim[D3](5)
+
+    gradcheck_naive(quad[UnitDim], scalar(123.456))
+    gradcheck_naive(quad[D1], (TensorBuilder > d1).randGaussian)
+    gradcheck_naive(quad[D2~D3], (TensorBuilder > d2 ^ d3).randGaussian)
+  }
+
+  def neural_sanity_check(random: Random): Unit = {
+    val dataDim = dim[DataNum](20)
+    val inputDim = dim[InputDim](10)
+    val hiddenDeim = dim[HiddenNum](5)
+    val labelDim = dim[LabelNum](10)
+
+    val data = (tb > dataDim ^ inputDim).randGaussian
+    val labels = (tb > dataDim ^ labelDim).zeros
+
+    for(i <- 0 until dataDim.value){
+      labels(i~random.nextInt(labelDim.value)) = 1
+    }
+
+    val w1 = (tb > inputDim ^ hiddenDeim).randGaussian
+    val b1 = (tb > hiddenDeim).randGaussian
+    val w2 = (tb > hiddenDeim ^ labelDim).randGaussian
+    val b2 = (tb > labelDim).randGaussian
+
+//    gradcheck_naive[InputDim~HiddenNum, (Int,Int)]((x: Tensor[InputDim~HiddenNum]) => forward_backward_prop(data, labels, x, b1, w2, b2), w1)
+  }
+
+  def main(args: Array[String]) {
+    sanity_check()
+  }
 
 
 

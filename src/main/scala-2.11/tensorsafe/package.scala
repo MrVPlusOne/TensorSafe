@@ -3,12 +3,19 @@
  */
 package object tensorsafe {
 
-  def neverRun = ???
-
   type ~[A, B] = (A, B)
-  def ~[A,B](a: A, b: B) = (a,b)
+
+  implicit class Tilde[A](a: A){
+    def ~[B](b: B) = (a,b)
+  }
 
   val unitDim = DimValue.const[UnitDim](1)
+
+  def scalar(x: Double): Tensor[UnitDim] = (TensorBuilder > unitDim).create(Array(x))
+
+  def dim[D<:Dimension](d: Int) = DimValue.const[D](d)
+
+  val tb = TensorBuilder
 
   private[tensorsafe] def cast[A](x: Any): A = x.asInstanceOf[A]
 

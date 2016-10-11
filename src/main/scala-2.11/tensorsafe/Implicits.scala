@@ -1,5 +1,7 @@
 package tensorsafe
 
+import tensorsafe.ParameterList.TensorList
+
 /**
  * implicits needed for type level computations
  */
@@ -10,14 +12,22 @@ object Implicits {
   // DimMatch
   private[this] val singleton_dimMatch = new DimMatch[Any,Any,Any] {}
 
+  implicit def dimMatch_unit: DimMatch[UnitDim, UnitDim, UnitDim] = cast(singleton_dimMatch)
+
   implicit def dimMatch_rightUnit[D <: Dimension]: DimMatch[D, UnitDim, D] = cast(singleton_dimMatch)
 
-  implicit def dimMatch_leftUnit[D <: VarDim]: DimMatch[UnitDim, D, D] = cast(singleton_dimMatch)
+  implicit def dimMatch_leftUnit[D <: Dimension]: DimMatch[UnitDim, D, D] = cast(singleton_dimMatch)
 
-  implicit def dimMatch[D <: VarDim]: DimMatch[D, D, D] = cast(singleton_dimMatch)
+  implicit def dimMatch_self[D]: DimMatch[D, D, D] = cast(singleton_dimMatch)
+
+  object dimMatch{
+    implicitly[DimMatch[UnitDim,UnitDim,UnitDim]]
+  }
 
   // Tensor Shape Broadcast
   private[this] val singleton_shapeBroadcast = new ShapeBroadcast[Any,Any,Any] {}
+
+//  implicit def shapeBroadcast_self[S]: ShapeBroadcast[S,S,S] = cast(singleton_shapeBroadcast)
   
   implicit def shapeBroadcast1[D1, D2, R](implicit m1: DimMatch[D1, D2, R]): ShapeBroadcast[D1, D2, R] = cast(singleton_shapeBroadcast)
 
@@ -26,6 +36,10 @@ object Implicits {
   implicit def shapeBroadcastLongShort[D1 <: Dimension, DD2, D2, R](implicit m: DimMatch[D1, D2, R]): ShapeBroadcast[(DD2, D2), D1, (DD2, R)] = cast(singleton_shapeBroadcast)
 
   implicit def shapeBroadcastND[D1Init, D1Last, D2Init, D2Last, RInit, RLast](implicit m1: DimMatch[D1Last, D2Last, RLast], m2: ShapeBroadcast[D1Init, D2Init, RInit]): ShapeBroadcast[(D1Init, D1Last), (D2Init, D2Last), (RInit, RLast)] = cast(singleton_shapeBroadcast)
+
+  object broadcastTest{
+    implicitly[ShapeBroadcast[UnitDim, UnitDim, UnitDim]]
+  }
 
 
   // Matrix multiplication
@@ -76,4 +90,13 @@ object Implicits {
   implicit def index2VecRec[Init](implicit i2v: IndexToVec[Init]): IndexToVec[(Init,Int)] = new IndexToVec[(Init, Int)] {
     override def vector(i: (Init, Int)): Vector[Int] = i2v.vector(i._1) :+ i._2
   }
+
+  // Tensor List
+  implicit def tensorListBasic[S]: TensorList[Tensor[S]] = new TensorList[Tensor[S]] {
+    override def flatten(tensors: Tensor[S]): IndexedSeq[Double] = tensors.ndArray.data().asDouble()
+
+    override def reconstruct(flattened: IndexedSeq[Double]): Tensor[S] = ???
+  }
+
+  implicit def tensorListRec[S,TS](implicit ts: TensorList[TS]): TensorList[(TS,Tensor[S])] = ???
 }
