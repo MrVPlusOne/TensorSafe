@@ -26,8 +26,6 @@ object DimValue{
   def const[D](v: Int) = new DimValue[D] {
     override def dim: Int = v
   }
-
-  val unitDim = const[UnitDim](1)
 }
 
 
@@ -59,6 +57,7 @@ trait ShapeBroadcast[A,B,R]
 /**
  * A tensor of shape 'A' matrix multiply a tensor of shape 'B' should results in a tensor of shape 'C'
  */
+@implicitNotFound(msg = "Cannot find a type class for matrix multiplication between ${A} and ${B}")
 trait DimMul[A,B,R]
 
 /**
@@ -78,3 +77,10 @@ case class TNumberValue[N<:TNumber](value: Int)
  */
 @implicitNotFound(msg="Index type ${I} does not match Shape type ${S}")
 trait ShapeToIndex[S,I]
+
+/**
+ * Convert A tuple index into a vector
+ */
+trait IndexToVec[I]{
+  def vector(i: I): Vector[Int]
+}

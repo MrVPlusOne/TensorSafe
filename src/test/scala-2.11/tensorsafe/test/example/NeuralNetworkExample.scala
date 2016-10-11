@@ -1,7 +1,7 @@
 package tensorsafe.test.example
 
 import tensorsafe._
-import tensorsafe.Implicits._
+import tensorsafe.Imports._
 
 trait DataNum extends VarDim
 trait InputDim extends VarDim
@@ -45,7 +45,7 @@ object NeuralNetworkExample {
    * @param f should be a function that takes a single argument and outputs the cost and its gradients
    * @param x is the point to check the gradient at
    */
-  def gradcheck_naive[S,A,Idx](f: Tensor[S]=> (Double, Tensor[S]), x: Tensor[S])(implicit s2i: ShapeToIndex[S,Idx]): Unit = {
+  def gradcheck_naive[S,A,Idx](f: Tensor[S]=> (Double, Tensor[S]), x: Tensor[S])(implicit s2i: ShapeToIndex[S,Idx], i2v: IndexToVec[Idx]): Unit = {
     val (_, grad) = f(x)
     val h = 1e-4
 
