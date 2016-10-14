@@ -9,11 +9,12 @@ package object tensorsafe {
     def ~[B](b: B) = (a,b)
   }
 
-  val unitDim = DimValue.const[UnitDim](1)
-
-  def scalar(x: Double): Tensor[UnitDim] = (TensorBuilder > unitDim).create(Array(x))
+  def scalar(x: Double): Tensor[RNil~UnitDim] = TensorBuilder.scalar(x)
 
   def dim[D<:Dimension](d: Int) = DimValue.const[D](d)
+
+  implicit val unitDim: DimValue[UnitDim] = dim[UnitDim](1)
+
 
   val tb = TensorBuilder
 

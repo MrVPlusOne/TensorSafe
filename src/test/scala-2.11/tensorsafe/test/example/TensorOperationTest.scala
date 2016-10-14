@@ -30,10 +30,16 @@ object TensorOperationTest {
     val dim6 = const[D5](6)
 
     val t1 = (TensorBuilder > dim2 ^ dim3 ^ dim4 ^ unitDim).zeros
-    val t2 = (TensorBuilder > dim3 ^ unitDim ^ dim5).ones
+    val t2 = (TensorBuilder > dim4 ^ unitDim).zeros
+    val t3 = (tb > dim3 ^ dim2 ^ unitDim).ones
+    val long = (tb > dim2 ^ dim3 ^ dim4 ^ dim5 ^ dim6 ^ dim2 ^ dim3 ^ dim4 ^ dim5 ^ dim5).ones
 
+    val ll = long
     t1 + t2
     t1 *^ t2
+//    val a = t2.t
+//    val b = t1.t
+//    val c = a.t *^ b.t
   }
 }
 

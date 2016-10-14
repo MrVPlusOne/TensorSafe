@@ -12,7 +12,7 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-//  "com.chuusai" %% "shapeless" % "2.3.2",
+  "com.chuusai" %% "shapeless" % "2.3.2",
   "org.nd4j" % "nd4j-native-platform" % "0.4.0"
 )
     

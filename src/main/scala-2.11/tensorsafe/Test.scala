@@ -31,6 +31,7 @@ object Test {
     val t2 = (TensorBuilder > dim4 ^ unitDim ^ dim5).ones
     val t3 = t1 *^ t2
 
+
     val t4 = (TensorBuilder > dim1 ^ unitDim ^ dim2).ones
     val t5 = (TensorBuilder > dim5 ^ dim2).randGaussian
     val t6 = t4 + t5
