@@ -64,8 +64,8 @@ def main(args: Array[String]): Unit = {
 
 Here we use `TensorBuilder` to create our tensors. The strange-looking
 type parameter `RNil~DA~DB` simply means a tensor of shape DA * DB. RNil 
- marks the start of a type list, just similar to the Nil construct in a 
- normal scala List. But this type list grows rightward, so it's called a RList,
+ marks the start of a type list, just like the Nil object always ends a 
+ normal scala List. But this type list grows rightward, that's why it's called a RList,
  and so called this RNil.
 
 By the way, ~ is just a type alias for tuple2, so A~B is equivalent to (A,B).
