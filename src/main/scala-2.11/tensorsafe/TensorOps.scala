@@ -7,7 +7,7 @@ import scala.annotation.implicitNotFound
   */
 object TensorOps {
 
-  @implicitNotFound(msg = "Not enough value information for Shape '${S}', make sure that each " +
+  @implicitNotFound(msg = "Not enough value information for Shape '${S}'\n Please make sure that each " +
     "dimension has a corresponding DimValue in scope. Zero-rank Tensor is not allowed.")
   class ShapeValue[S]private (val shape: IndexedSeq[Int]){
     def append[D<:Dimension](d: DimValue[D]) = new ShapeValue[(S,D)](shape:+d.value)
