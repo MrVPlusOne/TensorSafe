@@ -54,14 +54,14 @@ object NNExample {
    */
   def gradcheck_naive(f: Array[Double] => (Double, Array[Double]), x: Array[Double]): Unit = {
     val (_, grad) = f(x)
-    val h = 1e-4
+    val h = 1e-2
 
     x.indices.foreach(i=>{
-      x(i) = x(i) + h
+      x(i) += h
       val (fxh, _) = f(x)
-      x(i) = x(i) - 2*h
+      x(i) -= 2*h
       val (fxnh, _) = f(x)
-      x(i) = x(i) + h
+      x(i) += h
 
       val numericGrad = (fxh-fxnh) / (2*h)
 
@@ -69,7 +69,7 @@ object NNExample {
       import math.{abs, max}
       val relativeDiff =  abs(numericGrad-grad(i)) / max(max(1, abs(numericGrad)), abs(grad(i)))
 
-      if(relativeDiff > 1e-5){
+      if(relativeDiff > 2e-4){
         println("Gradient check failed.")
         println(s"First gradient error found at index $i")
         println(s"Your gradient: ${grad(i)} \t Numerical gradient: $numericGrad")

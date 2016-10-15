@@ -20,6 +20,8 @@ implicit val dim6 = const[Dim6](6)
 val t1 = tb.apply[RNil~Dim2~Dim3~Dim4~UnitDim].randGaussian
 val t2 = (tb > (dim3) ^ unitDim ^ dim5).ones
 
+123.456*2
+
 val ppp = t1 + t2 + t1
 val pt = ppp.t
 val t1t = t1.t

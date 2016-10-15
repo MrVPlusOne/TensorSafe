@@ -7,16 +7,22 @@ import org.nd4j.linalg.factory.Nd4j
 
 
 /**
- * Created by weijiayi on 09/10/2016.
+ * Tensor with its shape injected into type parameter 'S'. Use ND4j's ndArray as its internal representation.
  */
 class Tensor[S] private (private val ndArray: INDArray) {
+  /** an easy access to the shape 'S' */
   type Shape = S
+  /** an easy access to the type 'Tensor[S]' */
   type Type = Tensor[Shape]
 
   def shape = ndArray.shape()
 
-  def shapeIndexedSeq = shape.toIndexedSeq
-
+  /**
+    * A binary operator with broadcasting behavior
+    * @param t1 the other tensor
+    * @param op the underlying ndArray calculation
+    * @param sb two tensors have compatible shapes
+    */
   private def binaryOp[S1](t1: Tensor[S1], op: (INDArray,INDArray) => INDArray)
                           (implicit sb: ShapeBroadcast[S,S1]): Tensor[sb.Out] = {
     val newShape = broadCastShape(shape, t1.shape)
@@ -32,26 +38,41 @@ class Tensor[S] private (private val ndArray: INDArray) {
   }
 
   //--- binary broadcast operations
+  /** element-wise multiplication */
   def *^[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Tensor[sb.Out] = binaryOp(t1, _ mul _)
 
+  /** in place element-wise multiplication */
   def *^=[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Unit = binaryOp(t1, _ muli _)(sb)
 
+  /** element-wise division */
   def /[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Tensor[sb.Out] = binaryOp[S1](t1, _ div _)
 
+  /** in place element-wise division */
   def /=[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Unit = binaryOp(t1, _ divi _)(sb)
 
+  /** element-wise plus */
   def +[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Tensor[sb.Out] = binaryOp[S1](t1, _ add _)
 
+  /** in place element-wise plus */
   def +=[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Unit = binaryOp(t1, _ addi _)(sb)
 
+  /** element-wise subtraction */
   def -[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Tensor[sb.Out] = binaryOp[S1](t1, _ sub _)
 
+  /** in place element-wise plus */
   def -=[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Unit = binaryOp(t1, _ subi _)(sb)
 
 
+  //--- equality
+  def allZero(threshold: Double = 1e-6): Boolean = math.abs(sumAll)/size <= threshold
+
+  def =~=[S1](t1: Tensor[S1], threshold: Double = 1e-6)(implicit sb: ShapeBroadcast[S,S1]): Boolean = (this - t1).allZero(threshold)
+
   //--- matrix multiplication
+  /** matrix multiplication */
   def *[S1](t1: Tensor[S1])(implicit mmul: MatMul[S,S1]): Tensor[mmul.Out] = new Tensor[mmul.Out](ndArray mmul t1.ndArray)
 
+  /** in place matrix multiplication */
   def *=[S1](t1: Tensor[S1])(implicit mmul: MatMul[S,S1]): Unit = ndArray mmuli t1.ndArray
 
 
@@ -66,6 +87,11 @@ class Tensor[S] private (private val ndArray: INDArray) {
   /** inefficient */
   def foreachAll(f: Double => Double): Unit = vectorIndices.foreach(i => f(ndArray.getDouble(i:_*)))
 
+  /**
+    * use summation to reduce the rank of this tensor
+    * @param axis which axis to sum over, should be a TNumber, smaller axis corresponds to inner dimension,
+    *             check the resulting shape
+    */
   def sum[Axis<:TNumber, NewShape](axis: Axis)(implicit inRange: InRange[Axis, S, NewShape], tv: TNumberValue[Axis]): Tensor[NewShape] = {
     val dim = rank-1-tv.value
     new Tensor[NewShape](ndArray.sum(dim))
@@ -73,14 +99,18 @@ class Tensor[S] private (private val ndArray: INDArray) {
 
 
   //--- direct operations
+  /** tensor transpose
+    * e.g. a tensor of shape [RNil~A~B~C] becomes [RNil~C~B~A]*/
   def t(implicit rev: RListOps.Reverse[S]): Tensor[rev.Out] = new Tensor[rev.Out](ndArray.transpose())
 
   def duplicate = new Tensor[S](ndArray.dup())
 
   def rank = shape.length
 
+  /** the sum of all elements */
   def sumAll: Double = ndArray.sumNumber().doubleValue()
 
+  /** return a lazy sequence of type-safe indices of all elements */
   def indices[Idx](implicit s2i: ShapeToIndex[S,Idx]): Stream[Idx] = {
     val s = shape
     def indicesFromShape(s: IndexedSeq[Int]): Stream[Any] = {
@@ -90,6 +120,7 @@ class Tensor[S] private (private val ndArray: INDArray) {
     indicesFromShape(s).asInstanceOf[Stream[Idx]]
   }
 
+  /** return a lazy sequence of Vector[Int] indices of all elements */
   private def vectorIndices: Stream[Vector[Int]] = {
     val s = shape
     def indicesFromShape(s: IndexedSeq[Int]): Stream[Vector[Int]] = {
@@ -113,9 +144,15 @@ class Tensor[S] private (private val ndArray: INDArray) {
     }
   }
 
+  /** the total number of elements this tensor contains */
   def size = shape.product
 
-  def data = ndArray.data().asDouble()
+  /** all the elements of this tensor as an array */
+  def data: Array[Double] = {
+    val d = ndArray.data().asDouble()
+    assert(d.length == size)
+    d
+  }
 
 }
 
@@ -145,7 +182,7 @@ object Tensor {
   /**
     * create a tensor with shape 'Shape' from a java array.
     *
-    * @param flattened all the elements in this tensor, row-major
+    * @param flattened all elements in this tensor, row-major
     */
   def create[Shape](flattened: Array[Double])(implicit p: ShapeValue[Shape]): Tensor[Shape] = {
     val array = if(p.shape.length == 1) Nd4j.create(flattened)
@@ -185,12 +222,18 @@ class TensorBuilder[Shape] private (val sv: ShapeValue[Shape]){
 
 
 object TensorBuilder{
+  /** Create a tensor builder.
+    * Example usage:
+    *   (TensorBuilder > dim1 ^^ dim2 ^^ dim3).zeros
+    *  */
   def > [D<:Dimension](dv: DimValue[D]) = {
     implicit val dImplicit = dv
     new TensorBuilder[RNil~D](implicitly[ShapeValue[RNil~D]])
   }
 
+  /** Wrap a Double value into a vector(1D tensor) */
   def scalar(x: Double) = (TensorBuilder > unitDim).create(Array(x))
 
+  /** construct a `TensorBuilder` with shape `S` */
   def apply[S](implicit sv: ShapeValue[S]) = new TensorBuilder[S](sv)
 }
