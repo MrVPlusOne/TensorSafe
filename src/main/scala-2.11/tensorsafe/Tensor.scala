@@ -23,8 +23,8 @@ class Tensor[S] private (private val ndArray: INDArray) {
     * @param op the underlying ndArray calculation
     * @param sb two tensors have compatible shapes
     */
-  private def binaryOp[S1](t1: Tensor[S1], op: (INDArray,INDArray) => INDArray)
-                          (implicit sb: ShapeBroadcast[S,S1]): Tensor[sb.Out] = {
+  private def binaryOp[S1, Out](t1: Tensor[S1], op: (INDArray,INDArray) => INDArray)
+                          (implicit sb: ShapeBroadcast[S,S1, Out]): Tensor[Out] = {
     val newShape = broadCastShape(shape, t1.shape)
     def broadCastAndShape(a: INDArray): INDArray = {
       val reshaped = if(a.shape().length<newShape.length) {
@@ -34,46 +34,46 @@ class Tensor[S] private (private val ndArray: INDArray) {
       reshaped.broadcast(newShape :_*)
     }
     val array = op(broadCastAndShape(ndArray),broadCastAndShape(t1.ndArray))
-    new Tensor[sb.Out](array)
+    new Tensor[Out](array)
   }
 
   //--- binary broadcast operations
   /** element-wise multiplication */
-  def *^[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Tensor[sb.Out] = binaryOp(t1, _ mul _)
+  def *^[S1,Out](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1,Out]): Tensor[Out] = binaryOp(t1, _ mul _)
 
   /** in place element-wise multiplication */
-  def *^=[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Unit = binaryOp(t1, _ muli _)(sb)
+  def *^=[S1,Out](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1,Out]): Unit = binaryOp(t1, _ muli _)(sb)
 
   /** element-wise division */
-  def /[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Tensor[sb.Out] = binaryOp[S1](t1, _ div _)
+  def /[S1,Out](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1,Out]): Tensor[Out] = binaryOp(t1, _ div _)
 
   /** in place element-wise division */
-  def /=[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Unit = binaryOp(t1, _ divi _)(sb)
+  def /=[S1,Out](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1,Out]): Unit = binaryOp(t1, _ divi _)(sb)
 
   /** element-wise plus */
-  def +[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Tensor[sb.Out] = binaryOp[S1](t1, _ add _)
+  def +[S1,Out](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1,Out]): Tensor[Out] = binaryOp(t1, _ add _)
 
   /** in place element-wise plus */
-  def +=[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Unit = binaryOp(t1, _ addi _)(sb)
+  def +=[S1,Out](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1,Out]): Unit = binaryOp(t1, _ addi _)(sb)
 
   /** element-wise subtraction */
-  def -[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Tensor[sb.Out] = binaryOp[S1](t1, _ sub _)
+  def -[S1,Out](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1,Out]): Tensor[Out] = binaryOp(t1, _ sub _)
 
   /** in place element-wise plus */
-  def -=[S1](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1]): Unit = binaryOp(t1, _ subi _)(sb)
+  def -=[S1,Out](t1: Tensor[S1])(implicit sb: ShapeBroadcast[S,S1,Out]): Unit = binaryOp(t1, _ subi _)(sb)
 
 
   //--- equality
   def allZero(threshold: Double = 1e-6): Boolean = math.abs(sumAll)/size <= threshold
 
-  def =~=[S1](t1: Tensor[S1], threshold: Double = 1e-6)(implicit sb: ShapeBroadcast[S,S1]): Boolean = (this - t1).allZero(threshold)
+  def =~=[S1,Out](t1: Tensor[S1], threshold: Double = 1e-6)(implicit sb: ShapeBroadcast[S,S1,Out]): Boolean = (this - t1).allZero(threshold)
 
   //--- matrix multiplication
   /** matrix multiplication */
-  def *[S1](t1: Tensor[S1])(implicit mmul: MatMul[S,S1]): Tensor[mmul.Out] = new Tensor[mmul.Out](ndArray mmul t1.ndArray)
+  def *[S1,Out](t1: Tensor[S1])(implicit mmul: MatMul[S,S1,Out]): Tensor[Out] = new Tensor[Out](ndArray mmul t1.ndArray)
 
   /** in place matrix multiplication */
-  def *=[S1](t1: Tensor[S1])(implicit mmul: MatMul[S,S1]): Unit = ndArray mmuli t1.ndArray
+  def *=[S1,Out](t1: Tensor[S1])(implicit mmul: MatMul[S,S1,Out]): Unit = ndArray mmuli t1.ndArray
 
 
   //--- transformations

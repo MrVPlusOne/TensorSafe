@@ -28,24 +28,21 @@ object TensorOps {
     * @tparam B tensor shape 'B'
     */
   @implicitNotFound(msg = "Cannot find a type class for broadcast operation between ${A} and ${B}")
-  trait ShapeBroadcast[A,B]{
-    type Out
-  }
+  trait ShapeBroadcast[A,B, Out]
 
   object ShapeBroadcast{
-    type Aux[A,B,C] = ShapeBroadcast[A,B]{ type Out = C }
 
-    private[this] val singleton = new ShapeBroadcast[Any,Any] { type Out = Any}
+    private[this] val singleton = new ShapeBroadcast[Any,Any, Any] { type Out = Any}
 
-    implicit val nil: Aux[RNil, RNil, RNil] = cast(singleton)
+    implicit val nil: ShapeBroadcast[RNil, RNil, RNil] = cast(singleton)
 
-    implicit def shortLong[S]: Aux[RNil, S, S] = cast(singleton)
+    implicit def shortLong[S]: ShapeBroadcast[RNil, S, S] = cast(singleton)
 
-    implicit def longShort[S]: Aux[S, RNil, S] = cast(singleton)
+    implicit def longShort[S]: ShapeBroadcast[S, RNil, S] = cast(singleton)
 
     implicit def recursion[L1,L2,RLast,Init1,Init2,RInit]
-    (implicit m1: DimMatch.Aux[L1, L2, RLast], m2: ShapeBroadcast.Aux[Init1, Init2, RInit]):
-    Aux[Init1~L1, Init2~L2, RInit~RLast] = cast(singleton)
+    (implicit m1: DimMatch.Aux[L1, L2, RLast], m2: ShapeBroadcast[Init1, Init2, RInit]):
+    ShapeBroadcast[Init1~L1, Init2~L2, RInit~RLast] = cast(singleton)
 
   }
 
@@ -53,13 +50,12 @@ object TensorOps {
     * Matrix Multiplication
     */
   @implicitNotFound(msg = "Cannot find a implicit for matrix multiplication between ${A} and ${B}")
-  trait MatMul[A,B]{ type Out }
+  trait MatMul[A,B, Out]
 
   object MatMul {
-    type Aux[A,B,C] = MatMul[A,B]{ type Out = C}
-    private[this] val singleton = new MatMul[Any,Any] { type Out = Any }
+    private[this] val singleton = new MatMul[Any,Any,Any] {}
 
-    implicit def mult2D[D1, D2, D3]: Aux[RNil~D1~D2, RNil~D2~D3, RNil~D1~D3] = cast(singleton)
+    implicit def mult2D[D1, D2, D3]: MatMul[RNil~D1~D2, RNil~D2~D3, RNil~D1~D3] = cast(singleton)
   }
 
   /**

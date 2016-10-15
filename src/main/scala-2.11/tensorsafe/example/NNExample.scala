@@ -6,6 +6,8 @@ import tensorsafe.TensorOps._
 
 import scala.util.Random
 
+// Dimensions needed by this example. I don't put them into the NNExample object
+// so that my IDE displays their names shorter. (i.e. DataNum instead of NNExample.DataNum)
 trait DataNum extends VarDim
 trait InputDim extends VarDim
 trait LabelNum extends VarDim
@@ -86,8 +88,11 @@ object NNExample {
   trait D2 extends VarDim
   trait D3 extends VarDim
 
+  // A ShapeBroadcast[S,S,S] is required by the operation x *^ x,
+  // and a ShapeBroadcast[S,UnitDim,S] is required by x *^ scalar,
+  // if you don't provide these implicit parameters, the compiler won't be happy.
   def sanity_check(): Unit = {
-    def quad[S](implicit b: ShapeBroadcast.Aux[S,S,S], b2: ShapeBroadcast.Aux[S,RNil~UnitDim,S], sv: ShapeValue[S]) =
+    def quad[S](implicit b: ShapeBroadcast[S,S,S], b2: ShapeBroadcast[S,RNil~UnitDim,S], sv: ShapeValue[S]) =
       (data: Array[Double]) => {
         val x = TensorBuilder[S].create(data)
         val y = (x *^ x).sumAll
@@ -111,6 +116,7 @@ object NNExample {
     implicit val labelDim = dim[LabelNum](10)
 
     val data = (tb > dataDim ^ inputDim).randGaussian
+    // you can also write: val data = TensorBuilder[RNil~DataNum~InputDim].randGaussian
     val labels = (tb > dataDim ^ labelDim).zeros
 
     for(i <- 0 until dataDim.value){
@@ -136,9 +142,6 @@ object NNExample {
 
     neural_sanity_check(new Random())
   }
-
-
-
 
 
 

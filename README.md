@@ -73,15 +73,18 @@ By the way, ~ is just a type alias for tuple2, so A~B is equivalent to (A,B).
 ### What's the tensor shape? Ask your IDE
 
 Now let's check the type of these tensors! I can easily find them out by asking
-my IDE:
+my IDE. 
+
+(In Intellij IDEA, it's View|TypeInfo)
 
 ![ask-type](images/ask-type.png)
 
 You see? `featureVectors` has the type `Tensor[((RNil,DataNum),FeatureDimension)]`, which
-means it's a tensor of shape DataNum * FeatureDimension, Cheer! So in TensorSafe, you don't have
- to manually remember and track the shapes of every tensor any more.
+means it's a tensor of shape DataNum * FeatureDimension, Cheers! 
+
+So in TensorSafe, you don't need to manually remember and track the shapes of every tensor any more.
  
-### Provide DimValues 
+### Provide DimValues
  
 But wait! How dose the compiler know what values those dimensions should have?
 
