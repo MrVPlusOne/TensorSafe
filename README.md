@@ -5,16 +5,15 @@ Encode tensor/matrix shapes into types
 ## Motivation
 
 Writing tensor/matrix code is error-prone. Because the compiler doesn't
- stop you from writing code that multiplies two matrices with incompatible 
- shapes, for example.
- Instead, it lets your program run and run... oops! ... suddenly crashes. I 
- can recall myself wasting quite a lot time debugging problems like this.
- Wouldn't it be nice if we can detect such errors at compiling time?
+ stop you from writing shape/dimension-related errors like multiplying two matrices with incompatible
+ shapes, or forgetting transpose a matrix before an addition, etc.
+ Instead, it lets your program run and run... oops! ... suddenly crash. I
+ can recall myself wasting quite a lot of time debugging problems like this.
+ Wouldn't it be nice if we can detect and eliminate such errors at compiling time?
  
-That's why you need **TensorSafe**, a tensor computing wrapper library for
+That's why you need **TensorSafe**, a tensor manipulation wrapper library for
 [nd4j](https://github.com/deeplearning4j/nd4j). TensorSafe encodes tensor
-shape information into their types and uses type-level programming to detect
-inappropriate computations and compute the resulting shapes for you.
+shape information into their types and uses type-level programming (via Scala's implicit parameter resolution mechanism) to detect inappropriate computations at compiling time, moreover, it also computes the resulting shapes for you.
  
 
 ## Basic Example
@@ -66,7 +65,7 @@ Here we use `TensorBuilder` to create our tensors. The strange-looking
 type parameter `RNil~DA~DB` simply means a tensor of shape DA * DB. RNil 
  marks the start of a type list, just like the Nil object always ends a 
  normal scala List. But this type list grows rightward, that's why it's called a RList,
- and so called this RNil.
+ and hence this so-called RNil.
 
 By the way, ~ is just a type alias for tuple2, so A~B is equivalent to (A,B).
 
@@ -80,9 +79,9 @@ my IDE.
 ![ask-type](images/ask-type.png)
 
 You see? `featureVectors` has the type `Tensor[((RNil,DataNum),FeatureDimension)]`, which
-means it's a tensor of shape DataNum * FeatureDimension, Cheers! 
+means it's a tensor of shape DataNum * FeatureDimension, as expected.
 
-So in TensorSafe, you don't need to manually remember and track the shapes of every tensor any more.
+So in TensorSafe, you don't need to manually remember and track the shapes of every tensor any more!
  
 ### Provide DimValues
  
